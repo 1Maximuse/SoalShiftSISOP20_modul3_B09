@@ -44,6 +44,9 @@ int mode;
 int mencari;
 pthread_t threadcari;
 
+int input;
+pthread_t inputthread;
+
 int shmidpokemon;
 int shmidlp;
 int shmidpb;
@@ -53,10 +56,15 @@ int* shmlp;
 int* shmpb;
 int* shmb;
 
+
+pthread_mutex_t pokeslotwrite;
+int pokeslot;
+
+pthread_mutex_t pokemoncapturewrite;
 int pokemoncapture;
 pthread_t pokemoncapturethread;
 
-int pokemonwrite;
+pthread_mutex_t pokemonwrite;
 int pokemon[7];
 int pokemonAP[7];
 pthread_t pokemonthread[7];
@@ -70,6 +78,7 @@ int effect;
 pthread_t lullabythread;
 
 void printmainmenu() {
+	printf("\n");
 	if (mode == 0) {
 		if (mencari) printf("[ Normal Mode ]\n1. Berhenti Mencari\n2. Pokedex\n3. Shop\n4. Go to capture mode\nInput: ");
 		else printf("[ Normal Mode ]\n1. Cari Pokemon\n2. Pokedex\n3. Shop\n4. Go to capture mode\nInput: ");
@@ -88,13 +97,13 @@ void* flullabythread() {
 	pthread_exit(0);
 }
 
-void* fpokemonthread(void* arg) {
-	int slot = *(int*)arg;
+void* fpokemonthread() {
+	int slot = pokeslot;
+	pthread_mutex_unlock(&pokeslotwrite);
 	while (1) {
 		sleep(10);
 		if (mode == 1) continue;
-		while (pokemonwrite);
-		pokemonwrite = 1;
+		pthread_mutex_lock(&pokemonwrite);
 		pokemonAP[slot] -= 10;
 		if (pokemonAP[slot] == 0) {
 			if (rand() % 100 < 90) {
@@ -106,7 +115,7 @@ void* fpokemonthread(void* arg) {
 				pokemonAP[slot] = 50;
 			}
 		}
-		pokemonwrite = 0;
+		pthread_mutex_unlock(&pokemonwrite);
 	}
 }
 
@@ -121,7 +130,9 @@ void* fpokemoncapturethread() {
 		if (effect) continue;
 		if (rand() % 100 < thres) {
 			printf("Pokemon telah escape dari pencarian pokemon.\n");
+			pthread_mutex_lock(&pokemoncapturewrite);
 			pokemoncapture = -1;
+			pthread_mutex_unlock(&pokemoncapturewrite);
 			pthread_exit(0);
 		}
 	}
@@ -132,10 +143,14 @@ void* fthreadcari() {
 		sleep(10);
 		if (rand() % 100 < 60) {
 			mencari = 0;
+			pthread_mutex_lock(&pokemoncapturewrite);
 			pokemoncapture = *shmpokemon;
+			pthread_mutex_unlock(&pokemoncapturewrite);
 			pthread_create(&pokemoncapturethread, NULL, fpokemoncapturethread, NULL);
 			mencari = 0;
 			mode = 1;
+			input = -1;
+			pthread_cancel(inputthread);
 			pthread_exit(0);
 		}
 	}
@@ -169,22 +184,34 @@ void pokedex() {
 		while (poke == -1) {
 			scanf("%d", &poke);
 			if (poke >= 1 && poke <= 7 && pokemon[poke-1] != -1) {
+				pthread_mutex_lock(&pokemonwrite);
 				pthread_cancel(pokemonthread[poke-1]);
+				if (pokemon[poke-1] >= 15) {
+					pokedollar += 5000;
+					pokemon[poke-1] -= 15;
+				}
+				if (pokemon[poke-1] < 5) {
+					pokedollar += 80;
+				} else if (pokemon[poke-1] < 10) {
+					pokedollar += 100;
+				} else if (pokemon[poke-1] < 15) {
+					pokedollar += 200;
+				}
 				pokemon[poke-1] = -1;
 				pokemonAP[poke-1] = 0;
+				pthread_mutex_unlock(&pokemonwrite);
 				break;
 			}
 			printf("Input invalid.\n");
 		}
 	} else if (x == 2) {
-		while (pokemonwrite);
-		pokemonwrite = 1;
+		pthread_mutex_lock(&pokemonwrite);
 		for (int i = 0; i < 7; i++) {
 			if (pokemonAP[i] != -1) {
 				pokemonAP[i] += 10;
 			}
 		}
-		pokemonwrite = 0;
+		pthread_mutex_unlock(&pokemonwrite);
 		printf("Berhasil memberi berry.\n");
 	} else if (x == 3) {
 		return;
@@ -193,10 +220,10 @@ void pokedex() {
 
 void shop() {
 	printf("Pokedollar: %d\n", pokedollar);
-	printf("No  Nama            Stok  Harga\n");
-	printf("1.  Lullaby Powder  %3d   60\n", *shmlp);
-	printf("2.  Pokeball        %3d   5\n", *shmpb);
-	printf("3.  Berry           %3d   15\n", *shmb);
+	printf("No  Nama            Punya  Stok  Harga\n");
+	printf("1.  Lullaby Powder  %-3d    %-3d   60\n", lullaby, *shmlp);
+	printf("2.  Pokeball        %-3d    %-3d   5\n", pokeball, *shmpb);
+	printf("3.  Berry           %-3d    %-3d   15\n", berry, *shmb);
 	printf("4.  Keluar\n");
 	printf("Beli atau keluar: ");
 	int x;
@@ -213,19 +240,23 @@ void shop() {
 		if (jml <= *shmlp && lullaby + jml <= 99 && pokedollar >= jml * 60) {
 			*shmlp -= jml;
 			pokedollar -= jml * 60;
+			lullaby += jml;
 			printf("Berhasil membeli %d Lullaby Powder.\n", jml);
 			return;
 		}
-	} else if (x == 2 && pokeball + jml <= 99 && pokedollar >= jml * 5) {
-		if (jml <= *shmpb) {
+	} else if (x == 2) {
+		if (jml <= *shmpb && pokeball + jml <= 99 && pokedollar >= jml * 5) {
+			*shmpb -= jml;
 			pokedollar -= jml * 5;
+			pokeball += jml;
 			printf("Berhasil membeli %d Pokeball.\n", jml);
 			return;
 		}
-	} else if (x == 3 && berry + jml <= 99 && pokedollar >= jml * 15) {
-		if (jml <= *shmb) {
+	} else if (x == 3) {
+		if (jml <= *shmb && berry + jml <= 99 && pokedollar >= jml * 15) {
 			*shmb -= jml;
 			pokedollar -= jml * 15;
+			berry += jml;
 			printf("Berhasil membeli %d Berry.\n", jml);
 			return;
 		}
@@ -253,12 +284,11 @@ void tangkap() {
 	if (effect) thres += 20;
 	if (rand() % 100 < thres) {
 		printf("Berhasil menangkap %s!\n", namapokemon[pokemoncapture]);
-		while (pokemonwrite);
-		pokemonwrite = 1;
 		int slot = -1;
 		for (int i = 0; i < 7; i++) {
 			if (pokemon[i] == -1) {
 				slot = i;
+				break;
 			}
 		}
 		if (slot == -1) {
@@ -270,13 +300,18 @@ void tangkap() {
 			pokedollar += money;
 			printf("Slot pokemon penuh! Anda mendapatkan %d.\n", money);
 		} else {
+			pthread_mutex_lock(&pokemonwrite);
 			pokemon[slot] = pokemoncapture;
 			pokemonAP[slot] = 100;
-			pthread_create(&pokemonthread[slot], NULL, fpokemonthread, (void*)&slot);
+			pthread_mutex_unlock(&pokemonwrite);
+			pthread_mutex_lock(&pokeslotwrite);
+			pokeslot = slot;
+			pthread_create(&pokemonthread[slot], NULL, fpokemonthread, NULL);
 			pthread_cancel(pokemoncapturethread);
+			pthread_mutex_lock(&pokemoncapturewrite);
 			pokemoncapture = -1;
+			pthread_mutex_unlock(&pokemoncapturewrite);
 		}
-		pokemonwrite = 0;
 	} else {
 		printf("Tidak berhasil menangkap %s.\n", namapokemon[pokemoncapture]);
 	}
@@ -310,12 +345,19 @@ void cleanup() {
 	shmctl(shmidlp, IPC_RMID, NULL);
 	shmctl(shmidpb, IPC_RMID, NULL);
 	shmctl(shmidb, IPC_RMID, NULL);
+	pthread_mutex_destroy(&pokemonwrite);
+	pthread_mutex_destroy(&pokemoncapturewrite);
+	pthread_mutex_destroy(&pokeslotwrite);
 	exit(EXIT_SUCCESS);
+}
+
+void* finputthread() {
+	scanf("%d", &input);
 }
 
 int main() {
 	srand(time(NULL));
-	signal(SIGKILL, cleanup);
+	signal(SIGINT, cleanup);
 	key_t key1 = 1000;
 	key_t key2 = 1001;
 	key_t key3 = 1002;
@@ -332,19 +374,27 @@ int main() {
 	memset(pokemon, -1, sizeof(pokemon));
 	memset(pokemonAP, -1, sizeof(pokemonAP));
 	memset(pokemonthread, 0, sizeof(pokemonthread));
+	pthread_mutex_init(&pokemonwrite, NULL);
+	pthread_mutex_init(&pokemoncapturewrite, NULL);
+	pthread_mutex_init(&pokeslotwrite, NULL);
 	mode = 0;
 	mencari = 0;
-	pokemonwrite = 0;
 	lullaby = 0;
 	pokeball = 0;
 	berry = 0;
 	effect = 0;
-	pokedollar = 0;
+	pokedollar = 500;
+	pokeslot = -1;
 
 	while (1) {
 		printmainmenu();
-		int x;
-		scanf("%d", &x);
+		pthread_create(&inputthread, NULL, finputthread, NULL);
+		pthread_join(inputthread, NULL);
+		if (input == -1) {
+			printf("\n");
+			continue;
+		}
+		int x = input;
 		if (mode == 0) {// NORMAL
 			if (x == 1) {
 				caripokemon();

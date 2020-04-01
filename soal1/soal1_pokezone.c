@@ -23,11 +23,11 @@ void* frestockthread() {
     while (1) {
         sleep(10);
         *shmlp += 10;
-        if (*shmlp > 200) *shmlp = 100;
+        if (*shmlp > 200) *shmlp = 200;
         *shmpb += 10;
-        if (*shmpb > 200) *shmpb = 100;
+        if (*shmpb > 200) *shmpb = 200;
         *shmb += 10;
-        if (*shmb > 200) *shmb = 100;
+        if (*shmb > 200) *shmb = 200;
     }
 }
 
