@@ -158,3 +158,74 @@ Lalu, client membuat *thread* baru yang akan meng-*handle* inputan dengan `getch
 Apabila server mengirimkan suatu kode khusus (`-1337`), maka client akan mengetahui bahwa game telah berakhir. Maka, *thread* untuk menerima inputan akan dihentikan dan client membaca dari server untuk informasi siapa yang menang.
 
 Selesai dari game, pemain akan dikembalikan ke menu setelah login (screen 2).
+
+
+## #4a Perkalian Matriks
+Pada soal 4a, diminta untuk mengalikan matriks 4x2 dengan matriks 2x5, dengan hasil matriks 4x5. lalu hasil dari perkalian ini akan diproses pada soal 4b. untuk dapat memberi output dari 4a ke soal 4b, maka digunakan shared memory. berikut syntax untuk memberi share memory kepada soal no 4b
+
+	for (c = 0; c < 4; c++) 
+	{
+    		for (d = 0; d < 5; d++)
+		{
+      			*value = multiply[c][d];
+      			sleep(2);
+      			printf("%d\t",*value);
+        		// printf("%d\t", multiply[c][d]);
+    		}
+      		printf("\n");
+  	}
+  	shmdt(value);
+  	shmctl(shmid, IPC_RMID, NULL);
+  	return 0;
+	}
+	
+## #4b Faktorial dari hasil no 4a
+Pada soal 4b, kita diminta untuk mencari hasil dari faktorial setiap array yang telah dikirimkan oleh soal no 4a, dengan catatan harus menggunakan thread, maka berikut adalah output hasil faktorial dengan menggunakan thread
+
+	for (int i = 0;i < 20;i++)
+	{
+                arr[i]=*value;
+                angka=arr[i];
+                pthread_create(&tid[idx],NULL, &fac, (void*)angka);
+                idx++;
+                sleep(2);
+                if(i%5==4 && i>0)
+                {
+                        printf("\n");
+                }
+                else
+                {
+                        printf("\t\t");
+                }
+        }
+	for(int i=0; i< idx; i++)
+        {
+                pthread_join(tid[i],NULL);
+        }
+
+## #4c ls | Wc -l
+Pada soal no 4c, kita diminta untuk mencari wc (word count) pada suatu directory. berikut fungsi untuk mencari word count dengan menggunakan pipe.
+
+
+  	if (pipe(pipe1) == -1)
+ 	   exit(1);
+
+ 	 if ((fork()) == 0) 
+ 	 {
+  	  dup2(pipe1[1], 1);
+  	  close(pipe1[0]);
+ 	   close(pipe1[1]);
+ 	   char *argv1[] = {"ls", NULL};
+			execv("/bin/ls", argv1);
+	  }
+
+ 	 if (pipe(pipe2) == -1) 
+ 	   exit(1);
+ 	 else
+ 	 {
+   	 dup2(pipe1[0], 0);
+  	  close(pipe1[0]);
+   	 close(pipe1[1]);
+   	 char *argv1[] = {"wc", "-l", NULL};
+		execv("/usr/bin/wc", argv1);
+ 	 }
