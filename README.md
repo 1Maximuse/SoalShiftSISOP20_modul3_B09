@@ -189,45 +189,55 @@ Untuk argumen `-f`, program akan melakukan hal yang sama, hanya saja bedanya pro
 
 ---
 ### a. Perkalian Matriks
-Pada soal 4a, diminta untuk mengalikan matriks 4x2 dengan matriks 2x5, dengan hasil matriks 4x5. Hasil dari perkalian ini akan diproses pada soal berikutnya. Untuk dapat memberi output dari 4a ke soal 4b, maka digunakan shared memory, dengan tidak lupa untuk melakukan *detach* setelah digunakan. Berikut syntax untuk memberi share memory kepada soal no 4b.
+Pada soal 4a, diminta untuk mengalikan matriks 4x2 dengan matriks 2x5, dengan hasil matriks 4x5. Hasil dari perkalian ini akan diproses pada soal berikutnya.
+
+Untuk dapat memberi output dari 4a ke soal 4b, maka digunakan shared memory berupa array dengan ukuran 20 elemen, dan shared memory tidak dihapus setelah program selesai sehingga bisa dibaca kemudian dihapus oleh program 4b.
 
 ```c
-for (c = 0; c < 4; c++) 
-{
-	for (d = 0; d < 5; d++)
-	{
-	*value = multiply[c][d];
-	sleep(2);
-	printf("%d\t",*value);
+for (c = 0; c < 4; c++) {
+	for (d = 0; d < 5; d++) {
+		value[5*c+d] = multiply[c][d];
+		printf("%4d",multiply[c][d]);
 	}
 	printf("\n");
 }
 ```
 	
 ### b. Faktorial
-Pada soal 4b, kita diminta untuk mencari hasil dari faktorial setiap array yang telah dikirimkan oleh soal no 4a, dengan catatan harus menggunakan thread. Maka berikut adalah output hasil faktorial dengan menggunakan thread.
+Pada soal 4b, kita diminta untuk mencari hasil penjumlahan dari n sampai 1 dari setiap array yang telah dikirimkan oleh soal no 4a, dengan catatan harus menggunakan thread. 
+
+Data yang telah dihitung faktorialnya menggunakan *big number* disimpan terlebih dahulu pada sebuah *struct* agar urutan tidak berubah. *Struct*-nya sebagai berikut.
 
 ```c
+typedef struct data {
+	int angka;
+	char hasil[1500];
+}data;
+```
+
+Setelah semua thread selesai kemudian untuk setiap elemen dilakukan `pthread_join()` dan mencetak hasilnya.
+
+Maka berikut adalah program hasil faktorial dengan menggunakan thread.
+(contoh n=5, maka 5+4+3+2+1=15)
+
+```c
+pthread_t tid[20];
+data d[20];
 for (int i = 0;i < 20;i++)
 {
-	arr[i]=*value;
-	angka=arr[i];
-	pthread_create(&tid[idx],NULL, &fac, (void*)angka);
-	idx++;
-	sleep(2);
-	if(i%5==4 && i>0)
-	{
-		printf("\n");
-	}
-	else
-	{
-		printf("\t\t");
-	}
+	d[i].angka = value[i];
+	if (i % 5 == 0) printf("\n");
+	printf("%4d", value[i]);
+	pthread_create(&tid[i],NULL, &fac, (void*)&d[i]);
 }
-for(int i=0; i< idx; i++)
+printf("\n");
+for(int i=0; i< 20; i++)
 {
+	if (i % 5 == 0) printf("\n");
+	printf("%20s", d[i].hasil);
 	pthread_join(tid[i],NULL);
 }
+printf("\n");
 ```
 
 ### c. Word Count

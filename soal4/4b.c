@@ -54,7 +54,6 @@ void *fac(void* arg)
 	memset(d->hasil, 0, sizeof(d->hasil));
 	factorial(d->angka, d->hasil);
 }
-
 void main()
 {
 	key_t key = 1234;

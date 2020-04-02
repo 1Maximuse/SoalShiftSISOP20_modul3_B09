@@ -40,6 +40,5 @@ int main()
 		printf("\n");
 	}
 	shmdt(value);
-	// shmctl(shmid, IPC_RMID, NULL);
 	return 0;
 }
