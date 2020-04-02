@@ -23,7 +23,6 @@ int jumlah(int n)
 void *jumn(void* arg)
 {
 	data* d = (data*) arg;
-	//memset(d->hasil, 0, sizeof(d->hasil));
         d->hasil=jumlah(d->angka);
 }
 void main()
