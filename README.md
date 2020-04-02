@@ -230,7 +230,7 @@ for(int i=0; i< idx; i++)
 }
 ```
 
-### c Word count
+### c. Word Count
 Pada soal no 4c, kita diminta untuk mencari wc (word count) pada suatu directory. Berikut fungsi untuk mencari word count dengan menggunakan pipe.
 
 ```c
