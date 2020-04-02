@@ -20,7 +20,10 @@ void* taptap(void* arg) {
     int sock = *(int*) arg;
     while (1) {
         char c = getchar();
-        if (c == ' ') send(sock, &c, sizeof(c), 0);
+        if (c == ' ') {
+            printf("hit !!\n");
+            send(sock, &c, sizeof(c), 0);
+        }
     }
 }
 
