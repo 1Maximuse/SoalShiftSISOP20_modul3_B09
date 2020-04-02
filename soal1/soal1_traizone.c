@@ -203,14 +203,19 @@ void pokedex() {
 			printf("Input invalid.\n");
 		}
 	} else if (x == 2) {
-		pthread_mutex_lock(&pokemonwrite);
-		for (int i = 0; i < 7; i++) {
-			if (pokemonAP[i] != -1) {
-				pokemonAP[i] += 10;
+		if (berry > 0) {
+			berry--;
+			pthread_mutex_lock(&pokemonwrite);
+			for (int i = 0; i < 7; i++) {
+				if (pokemonAP[i] != -1) {
+					pokemonAP[i] += 10;
+				}
 			}
+			pthread_mutex_unlock(&pokemonwrite);
+			printf("Berhasil memberi berry.\n");
+		} else {
+			printf("Gagal memberi berry.\n");
 		}
-		pthread_mutex_unlock(&pokemonwrite);
-		printf("Berhasil memberi berry.\n");
 	} else if (x == 3) {
 		return;
 	}
