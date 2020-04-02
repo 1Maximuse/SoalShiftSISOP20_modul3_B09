@@ -159,73 +159,105 @@ Apabila server mengirimkan suatu kode khusus (`-1337`), maka client akan mengeta
 
 Selesai dari game, pemain akan dikembalikan ke menu setelah login (screen 2).
 
+## #3 &ndash; Mengkategorikan File
+> Source code: [soal3.c](https://github.com/1Maximuse/SoalShiftSISOP20_modul3_B09/blob/master/soal3/soal3.c)
 
-## #4a Perkalian Matriks
-Pada soal 4a, diminta untuk mengalikan matriks 4x2 dengan matriks 2x5, dengan hasil matriks 4x5. lalu hasil dari perkalian ini akan diproses pada soal 4b. untuk dapat memberi output dari 4a ke soal 4b, maka digunakan shared memory. berikut syntax untuk memberi share memory kepada soal no 4b
+---
+Pada soal ini, yang pertama harus dilakukan adalah membagi-bagi sesuai dengan tipe tindakan yang ingin dilakukan. Untuk argumen `-d` dan `\*` dapat dijadikan satu, dengan `\*` menggunakan direktori *working directory*.
 
-	for (c = 0; c < 4; c++) 
+Pertama, program akan menentukan jumlah thread yang perlu dibuat dengan melakukan perulangan sejumlah file-file yang valid. Setelah itu, program akan melakukan perulangan lagi, hanya saja kali ini membentuk thread untuk memindahkan sesuai dengan ekstensi file.
+
+Pada setiap thread, program akan membaca nama file dan mengambil nama ekstensinya sebagai berikut.
+```c
+char* ext = strrchr(d->name, '.');
+```
+
+Apabila file memiliki ekstensi, maka pertama-tama ekstensi tersebut diubah jadi *lowercase* dengan kode berikut.
+```c
+void lower(char* s) {
+    for (int i = 0; i < strlen(s); i++) {
+        s[i] = tolower(s[i]);
+    }
+}
+```
+Setelah itu, folder dengan nama sesuai ekstensi *lowercase* tersebut dibuat, dan file dipindah dengan menggunakan fungsi `rename()` ke folder yang bersangkutan. Apabila ekstensi tidak ada atau `NULL`, maka file dipindah ke subfolder `Unknown`.
+
+Untuk argumen `-f`, program akan melakukan hal yang sama, hanya saja bedanya program tidak perlu melakukan looping untuk semua file-file, sedangkan langsung melakukan pemindahan dari argumen yang diinputkan.
+
+## #4 &ndash; Teka-teki Norland
+> Source code: [4a.c](https://github.com/1Maximuse/SoalShiftSISOP20_modul3_B09/blob/master/soal4/4a.c), [4b.c](https://github.com/1Maximuse/SoalShiftSISOP20_modul3_B09/blob/master/soal4/4b.c), [4c.c](https://github.com/1Maximuse/SoalShiftSISOP20_modul3_B09/blob/master/soal4/4c.c)
+
+---
+### a. Perkalian Matriks
+Pada soal 4a, diminta untuk mengalikan matriks 4x2 dengan matriks 2x5, dengan hasil matriks 4x5. Hasil dari perkalian ini akan diproses pada soal berikutnya. Untuk dapat memberi output dari 4a ke soal 4b, maka digunakan shared memory. Berikut syntax untuk memberi share memory kepada soal no 4b.
+
+```c
+for (c = 0; c < 4; c++) 
+{
+	for (d = 0; d < 5; d++)
 	{
-    		for (d = 0; d < 5; d++)
-		{
-      			*value = multiply[c][d];
-      			sleep(2);
-      			printf("%d\t",*value);
-        		// printf("%d\t", multiply[c][d]);
-    		}
-      		printf("\n");
-  	}
-  	shmdt(value);
-  	shmctl(shmid, IPC_RMID, NULL);
-  	return 0;
+	*value = multiply[c][d];
+	sleep(2);
+	printf("%d\t",*value);
 	}
+	printf("\n");
+}
+shmdt(value);
+shmctl(shmid, IPC_RMID, NULL);
+return 0;
+}
+```
 	
-## #4b Faktorial dari hasil no 4a
-Pada soal 4b, kita diminta untuk mencari hasil dari faktorial setiap array yang telah dikirimkan oleh soal no 4a, dengan catatan harus menggunakan thread, maka berikut adalah output hasil faktorial dengan menggunakan thread
+### b. Faktorial
+Pada soal 4b, kita diminta untuk mencari hasil dari faktorial setiap array yang telah dikirimkan oleh soal no 4a, dengan catatan harus menggunakan thread. Maka berikut adalah output hasil faktorial dengan menggunakan thread.
 
-	for (int i = 0;i < 20;i++)
+```c
+for (int i = 0;i < 20;i++)
+{
+	arr[i]=*value;
+	angka=arr[i];
+	pthread_create(&tid[idx],NULL, &fac, (void*)angka);
+	idx++;
+	sleep(2);
+	if(i%5==4 && i>0)
 	{
-                arr[i]=*value;
-                angka=arr[i];
-                pthread_create(&tid[idx],NULL, &fac, (void*)angka);
-                idx++;
-                sleep(2);
-                if(i%5==4 && i>0)
-                {
-                        printf("\n");
-                }
-                else
-                {
-                        printf("\t\t");
-                }
-        }
-	for(int i=0; i< idx; i++)
-        {
-                pthread_join(tid[i],NULL);
-        }
+		printf("\n");
+	}
+	else
+	{
+		printf("\t\t");
+	}
+}
+for(int i=0; i< idx; i++)
+{
+	pthread_join(tid[i],NULL);
+}
+```
 
-## #4c ls | Wc -l
-Pada soal no 4c, kita diminta untuk mencari wc (word count) pada suatu directory. berikut fungsi untuk mencari word count dengan menggunakan pipe.
+### c Word count
+Pada soal no 4c, kita diminta untuk mencari wc (word count) pada suatu directory. Berikut fungsi untuk mencari word count dengan menggunakan pipe.
 
+```c
+if (pipe(pipe1) == -1)
+	exit(1);
 
-  	if (pipe(pipe1) == -1)
- 	   exit(1);
+if ((fork()) == 0) 
+{
+	dup2(pipe1[1], 1);
+	close(pipe1[0]);
+	close(pipe1[1]);
+	char *argv1[] = {"ls", NULL};
+	execv("/bin/ls", argv1);
+}
 
- 	 if ((fork()) == 0) 
- 	 {
-  	  dup2(pipe1[1], 1);
-  	  close(pipe1[0]);
- 	   close(pipe1[1]);
- 	   char *argv1[] = {"ls", NULL};
-			execv("/bin/ls", argv1);
-	  }
-
- 	 if (pipe(pipe2) == -1) 
- 	   exit(1);
- 	 else
- 	 {
-   	 dup2(pipe1[0], 0);
-  	  close(pipe1[0]);
-   	 close(pipe1[1]);
-   	 char *argv1[] = {"wc", "-l", NULL};
-		execv("/usr/bin/wc", argv1);
- 	 }
+if (pipe(pipe2) == -1) 
+	exit(1);
+else
+{
+	dup2(pipe1[0], 0);
+	close(pipe1[0]);
+	close(pipe1[1]);
+	char *argv1[] = {"wc", "-l", NULL};
+	execv("/usr/bin/wc", argv1);
+}
+```
