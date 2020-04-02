@@ -213,7 +213,7 @@ for (int i = 0;i < 20;i++)
 {
 	arr[i]=*value;
 	angka=arr[i];
-	pthread_create(&tid[idx],NULL, &jum, (void*)angka);
+	pthread_create(&tid[idx],NULL, &jumn, (void*)angka);
 	idx++;
 	sleep(2);
 	if(i%5==4 && i>0)
