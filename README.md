@@ -205,14 +205,15 @@ for (c = 0; c < 4; c++)
 ```
 	
 ### b. Faktorial
-Pada soal 4b, kita diminta untuk mencari hasil dari faktorial setiap array yang telah dikirimkan oleh soal no 4a, dengan catatan harus menggunakan thread. Maka berikut adalah output hasil faktorial dengan menggunakan thread.
+Pada soal 4b, kita diminta untuk mencari hasil penjumlahan dari n sampai 1 dari setiap array yang telah dikirimkan oleh soal no 4a, dengan catatan harus menggunakan thread. Maka berikut adalah output hasil faktorial dengan menggunakan thread.
+(contoh n=5, maka 5+4+3+2+1=15)
 
 ```c
 for (int i = 0;i < 20;i++)
 {
 	arr[i]=*value;
 	angka=arr[i];
-	pthread_create(&tid[idx],NULL, &fac, (void*)angka);
+	pthread_create(&tid[idx],NULL, &jum, (void*)angka);
 	idx++;
 	sleep(2);
 	if(i%5==4 && i>0)
