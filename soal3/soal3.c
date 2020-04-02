@@ -6,11 +6,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <ctype.h> 
 
 typedef struct tdata {
     char d[200];
     char name[200];
 }tdata;
+
+void lower(char* s) {
+    for (int i = 0; i < strlen(s); i++) {
+        s[i] = tolower(s[i]);
+    }
+}
 
 void* move(void* arg) {
     tdata* d = (tdata*)arg;
@@ -18,8 +25,11 @@ void* move(void* arg) {
     sprintf(oldpath, "%s/%s", d->d, d->name);
     char* ext = strrchr(d->name, '.');
     if (ext != NULL) {
-        mkdir(ext+1, 0755);
-        sprintf(newpath, "./%s/%s", ext+1, d->name);
+        char ori[150];
+        strcpy(ori, ext+1);
+        lower(ori);
+        mkdir(ori, 0755);
+        sprintf(newpath, "./%s/%s", ori, d->name);
     } else {
         mkdir("Unknown", 0755);
         sprintf(newpath, "./Unknown/%s", d->name);
@@ -36,8 +46,11 @@ void perfile(int argc, char* argv[]) {
         char* ext = strrchr(argv[i], '.');
         char newpath[400];
         if (ext != NULL) {
-            mkdir(ext+1, 0755);
-            sprintf(newpath, "./%s/%s", ext+1, name);
+            char ori[150];
+            strcpy(ori, ext+1);
+            lower(ori);
+            mkdir(ori, 0755);
+            sprintf(newpath, "./%s/%s", ori, name);
         } else {
             mkdir("Unknown", 0755);
             sprintf(newpath, "./Unknown/%s", name);
