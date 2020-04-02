@@ -89,9 +89,7 @@ void printmainmenu() {
 }
 
 void* flullabythread() {
-	while (1) {
-		sleep(10);
-	}
+	sleep(10);
 	effect = 0;
 	printf("Efek lullaby powder habis.\n");
 	pthread_exit(0);
