@@ -189,7 +189,7 @@ Untuk argumen `-f`, program akan melakukan hal yang sama, hanya saja bedanya pro
 
 ---
 ### a. Perkalian Matriks
-Pada soal 4a, diminta untuk mengalikan matriks 4x2 dengan matriks 2x5, dengan hasil matriks 4x5. Hasil dari perkalian ini akan diproses pada soal berikutnya. Untuk dapat memberi output dari 4a ke soal 4b, maka digunakan shared memory. Berikut syntax untuk memberi share memory kepada soal no 4b.
+Pada soal 4a, diminta untuk mengalikan matriks 4x2 dengan matriks 2x5, dengan hasil matriks 4x5. Hasil dari perkalian ini akan diproses pada soal berikutnya. Untuk dapat memberi output dari 4a ke soal 4b, maka digunakan shared memory, dengan tidak lupa untuk melakukan *detach* setelah digunakan. Berikut syntax untuk memberi share memory kepada soal no 4b.
 
 ```c
 for (c = 0; c < 4; c++) 
@@ -201,10 +201,6 @@ for (c = 0; c < 4; c++)
 	printf("%d\t",*value);
 	}
 	printf("\n");
-}
-shmdt(value);
-shmctl(shmid, IPC_RMID, NULL);
-return 0;
 }
 ```
 	
