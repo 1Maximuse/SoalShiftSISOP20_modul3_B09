@@ -37,7 +37,7 @@ void* frandomthread() {
         int r = rand() % 100;
         if (r < 5) {
             poke = (rand() % 5) + 10;
-        } else if (r < 15) {
+        } else if (r < 20) {
             poke = (rand() % 5) + 5;
         } else {
             poke = (rand() % 5);
