@@ -34,10 +34,10 @@ int main()
 	  {
       *value = multiply[c][d];
       sleep(2);
-      printf("%d\n",*value);
+      printf("%d\t",*value);
         // printf("%d\t", multiply[c][d]);
     }
-      // printf("\n");
+      printf("\n");
   }
   shmdt(value);
   shmctl(shmid, IPC_RMID, NULL);
