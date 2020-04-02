@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-void jumlah(int n)
+void jumlahn(int n)
 {
 	int sum=0;
 	for(n;n>0;n--)
@@ -14,7 +14,7 @@ void jumlah(int n)
 	printf("%d",sum);
         // return sum;
 }
-void *jum(int angka)
+void *jumn(int angka)
 {
         jumlah(angka);
 }
@@ -33,7 +33,7 @@ void main()
 	{
                 arr[i]=*value;
                 angka=arr[i];
-                pthread_create(&tid[idx],NULL, &jum, (void*)angka);
+                pthread_create(&tid[idx],NULL, &jumn, (void*)angka);
                 idx++;
                 sleep(2);
                 if(i%5==4 && i>0)
